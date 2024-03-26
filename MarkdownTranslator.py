@@ -126,7 +126,7 @@ class MdTranslater:
             elif is_code_block or do_not_trans:
                 nodes.append(TransparentNode(line))
             else:
-                if len(line.strip()) == 0 or line.startswith(('<audio', '<img ')):  # 空行
+                if len(line.strip()) == 0 or line.strip().startswith(('<audio', '<img ', '<p ', '<span', '<figure', '</figure>', '<iframe')):  # 空行
                     nodes.append(TransparentNode(line))
                 elif re.search('!\[.*?\]\(.*?\)', line) is not None:  # 图片
                     nodes.append(ImageNode(line))
@@ -267,7 +267,8 @@ if __name__ == '__main__':
                 start = time.time()
                 threads = []
                 for lang in waiting_to_be_translated_langs:
-                    translater = MdTranslater(src_language, base_dir, detect_filename)
+                    # translater = MdTranslater(src_lang, base_dir, detect_filename)
+                    translater = MdTranslater('en', base_dir, detect_filename)
                     t = threading.Thread(target=translater.translate_to, args=(lang,))
                     t.start()
                     threads.append(t)
