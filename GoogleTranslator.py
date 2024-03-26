@@ -5,12 +5,16 @@ import sys
 import threading
 import urllib.parse
 import urllib.request
+import socks
+import socket
 
 # pip install PyExecJS
 import execjs
 
 from config import src_language
 
+socks.set_default_proxy(socks.SOCKS5, "127.0.0.1", 10793)
+socket.socket = socks.socksocket
 # Google Translate Api 池
 appendix = ['', '.tw', '.hk', '.af', '.ai', '.ag', '.ar', '.au', '.bh', '.bd', '.by', '.bz', '.bo', '.br', '.bn', '.bi',
             '.kh', '.co', '.cu', '.cy', '.cz', '.do', '.ec', '.eg', '.sv', '.et', '.fj', '.ge', '.gh', '.gi', '.gr',
@@ -68,7 +72,7 @@ class GoogleTrans(object):
         if getattr(sys, 'frozen', False):
             base_path = sys._MEIPASS
         else:
-            base_path = os.path.abspath(os.path.dirname(__file__))
+            base_path = os.path.abspath('.')
         with open(os.path.join(base_path, 'token.js'), 'r', encoding='utf-8') as f:
             self.js_fun = execjs.compile(f.read())
 
