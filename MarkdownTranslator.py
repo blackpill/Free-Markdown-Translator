@@ -8,6 +8,15 @@ from GoogleTranslator import GoogleTrans, logging_lock
 from Nodes import *
 from config import *
 
+def change_lang_case(dest_lang):
+    if dest_lang == 'zh-cn':
+       dest_lang_file = 'zh-CN'
+    elif dest_lang == 'zh-tw':
+       dest_lang_file = 'zh-TW'
+    else:
+       dest_lang_file = dest_lang
+    return dest_lang_file
+
 
 class MdTranslater:
     trans = GoogleTrans()
@@ -101,6 +110,11 @@ class MdTranslater:
             if line.strip() == '---':
                 is_front_matter = not is_front_matter
                 nodes.append(TransparentNode(line))
+                # 添加语言设定
+                if is_front_matter: #添加在front matter最前面
+                    dest_lang = change_lang_case(self.__dest_lang)
+                    lang_line = f'lang: {dest_lang}\n'
+                    nodes.append(TransparentNode(lang_line))
                 # 添加头部的机器翻译警告
                 if not is_front_matter and self.__insert_warnings:
                     nodes.append(TransparentNode(f'\n> {warnings_mapping[self.__dest_lang]}\n'))
@@ -115,11 +129,12 @@ class MdTranslater:
                 continue
 
             if is_front_matter:
-                if line.startswith(front_matter_key_value_keys):
+                line_striped = line.strip()
+                if line_striped.startswith(front_matter_key_value_keys):
                     nodes.append(KeyValueNode(line))
-                elif line.startswith(front_matter_transparent_keys):
+                elif line_striped.startswith(front_matter_transparent_keys):
                     nodes.append(TransparentNode(line))
-                elif line.startswith(front_matter_key_value_array_keys):
+                elif line_striped.startswith(front_matter_key_value_array_keys):
                     nodes.append(KeyValueArrayNode(line))
                 else:
                     nodes.append(SolidNode(line))
@@ -175,11 +190,13 @@ class MdTranslater:
             final_markdown += node.compose()
         return final_markdown
 
+
     def translate_to(self, dest_lang):
         """
         执行文件的读取、翻译、写入
         """
-        dest_filename = os.path.join(self.__base_dir, f'{self.__src_filename_body}.{dest_lang}.md')
+        dest_lang_file = change_lang_case(dest_lang)
+        dest_filename = os.path.join(self.__base_dir, f'{self.__src_filename_body}-{dest_lang_file}.md')
         if not os.path.exists(self.__src_filename):
             print('src file ', self.__src_filename, ' not exist! skip.')
             return
@@ -258,7 +275,8 @@ if __name__ == '__main__':
                 # 将要被翻译至的语言
                 waiting_to_be_translated_langs = []
                 for lang in dest_langs:
-                    dest_filename = os.path.join(base_dir, f'{detect_filename}.{lang}.md')
+                    dest_lang_file = change_lang_case(lang)
+                    dest_filename = os.path.join(base_dir, f'{detect_filename}-{dest_lang_file}.md')
                     if os.path.exists(dest_filename):
                         if input(f'{dest_filename} already exists, whether to continue(y/n): ') != 'y':
                             continue
